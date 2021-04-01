@@ -331,6 +331,7 @@ Resources:
         configSets:
           deploy_webserver:
             - install_webserver
+            - install_composer
             - build_cacheclient
             - build_drupal
             - build_opcache
@@ -372,6 +373,19 @@ Resources:
             create_site_conf:
               command: ./create_site_conf.sh
               cwd: /tmp
+              ignoreErrors: false
+        install_composer:
+          commands:
+            download_composer:
+              command: wget https://getcomposer.org/download/2.0.12/composer.phar
+              cwd: /tmp
+              ignoreErrors: false
+            install_composer:
+              command: mv /tmp/composer.phar /usr/local/bin/
+              ignoreErrors: false
+            set_composer_perms:
+              command: chmod +x composer.phar
+              cwd: /usr/local/bin
               ignoreErrors: false
         build_cacheclient:
           packages:
