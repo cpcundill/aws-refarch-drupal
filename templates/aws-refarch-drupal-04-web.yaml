@@ -357,8 +357,8 @@ Resources:
                     "if [ ! -f /etc/httpd/conf.d/", !Ref Directory, ".conf ]; then\n",                    
                     "   touch /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
                     "   echo 'ServerName 127.0.0.1:80' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
-                    "   echo 'DocumentRoot /var/www/drupal/", !Ref Directory, "' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
-                    "   echo '<Directory /var/www/drupal/", !Ref Directory, ">' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
+                    "   echo 'DocumentRoot /var/www/drupal/", !Ref Directory, "/web' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
+                    "   echo '<Directory /var/www/drupal/", !Ref Directory, "/web>' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
                     "   echo '  Options Indexes FollowSymLinks' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
                     "   echo '  AllowOverride All' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
                     "   echo '  Require all granted' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
@@ -424,8 +424,8 @@ Resources:
                   sed -i 's/;opcache.file_cache=.*/opcache.file_cache=\/var\/www\/.opcache/' /etc/php-7.0.d/10-opcache.ini
                   sed -i 's/opcache.memory_consumption=.*/opcache.memory_consumption=512/' /etc/php-7.0.d/10-opcache.ini
                   # download opcache-instance.php to verify opcache status
-                  if [ ! -f /var/www/drupal/${Directory}/opcache-instanceid.php ]; then
-                      aws s3 cp 's3://aws-refarch/drupal/latest/bits/opcache-instanceid.php' /var/www/drupal/${Directory}/.
+                  if [ ! -f /var/www/drupal/${Directory}/web/opcache-instanceid.php ]; then
+                      aws s3 cp 's3://aws-refarch/drupal/latest/bits/opcache-instanceid.php' /var/www/drupal/${Directory}/web/.
                   fi
               mode: 000500
               owner: root
@@ -441,9 +441,9 @@ Resources:
                     "   cd /var/www/drupal/\n",
                     "   composer create-project localgovdrupal/localgov-project ", !Ref Directory, " --remove-vcs\n",
                     "   # set permissions of drupal site directories\n", 
-                    "   chown -R apache:apache /var/www/drupal/", !Ref Directory, "\n",
-                    "   if [ ! -f /var/www/drupal/", !Ref Directory, "/opcache-instanceid.php ]; then\n",
-                    "     aws s3 cp 's3://aws-refarch/wordpress/latest/bits/opcache-instanceid.php' /var/www/drupal/", !Ref Directory, "/.\n",
+                    "   chown -R apache:apache /var/www/drupal/", !Ref Directory, "/web\n",
+                    "   if [ ! -f /var/www/drupal/", !Ref Directory, "/web/opcache-instanceid.php ]; then\n",
+                    "     aws s3 cp 's3://aws-refarch/wordpress/latest/bits/opcache-instanceid.php' /var/www/drupal/", !Ref Directory, "/web/.\n",
                     "   fi\n",
                     "fi\n"
                   ]
