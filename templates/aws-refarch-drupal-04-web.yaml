@@ -26,6 +26,8 @@ Metadata:
       Parameters:
         - Title
         - ComposerProject
+        - ComposerUseDev
+        - InstallProfile
         - DomainName
         - Directory
         - AdminUsername
@@ -92,6 +94,10 @@ Metadata:
         default: Site Title
       ComposerProject:
         default: Composer Project Namespace
+      ComposerUseDev:
+        default: Composer Build Type
+      InstallProfile:
+        default: Install Profile
 
 Parameters:
 
@@ -218,10 +224,22 @@ Parameters:
     AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9 _-]*)([a-zA-Z0-9])$
     Description: The Drupal website title.
     Type: String
+  InstallProfile:
+    Default: localgov
+    AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9 _-]*)([a-zA-Z0-9])$
+    Description: The Drupal install profile to use.
+    Type: String
   ComposerProject:
     Default: localgovdrupal/localgov-project
     AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9\/ _-]*)([a-zA-Z0-9])$
     Description: The composer project to install.
+    Type: String
+  ComposerUseDev:
+    AllowedValues:
+      - True
+      - False
+    Default: True
+    Description: Specifies whether Composer should use a dev version when installing Drupal.
     Type: String
 
 Conditions:
@@ -430,7 +448,7 @@ Resources:
                     "   # no 'stable' version of LocalGovDrupal yet\n",
                     "   export COMPOSER_ALLOW_SUPERUSER=1; composer create-project --stability dev ", !Ref ComposerProject, " ", !Ref Directory, " --remove-vcs\n",
                     "   # install the site with drush\n"
-                    "   ", !Ref Directory, "/vendor/drush/drush/drush -y site-install localgov --db-url=mysql://", !Ref DatabaseMasterUsername, ":", !Ref DatabaseMasterPassword, "@", !GetAtt [ rds, Outputs.DatabaseClusterEndpointAddress ], "/", !Ref DatabaseName, "  --account-pass=", !Ref AdminPassword, " --account-mail=", !Ref AdminEmail, "\n",
+                    "   ", !Ref Directory, "/vendor/drush/drush/drush -y site-install ", !Ref InstallProfile, " --db-url=mysql://", !Ref DatabaseMasterUsername, ":", !Ref DatabaseMasterPassword, "@", !GetAtt [ rds, Outputs.DatabaseClusterEndpointAddress ], "/", !Ref DatabaseName, "  --account-pass=", !Ref AdminPassword, " --account-mail=", !Ref AdminEmail, "\n",
                     "   # run a cache rebuild for safety\n"
                     "   ", !Ref Directory, "/vendor/drush/drush/drush -y cr\n"
                     "   # set permissions of drupal site directories\n", 
