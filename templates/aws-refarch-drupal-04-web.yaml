@@ -448,7 +448,7 @@ Resources:
                     "# no 'stable' version of LocalGovDrupal yet\n",
                     "export COMPOSER_ALLOW_SUPERUSER=1; composer create-project --stability dev ", !Ref ComposerProject, " ", !Ref Directory, " --remove-vcs\n",
                     "# install the site with drush\n",
-                    !Ref Directory, "/vendor/drush/drush/drush -y site-install ", !Ref InstallProfile, " --db-url=mysql://", !Ref DatabaseMasterUsername, ":", !Ref DatabaseMasterPassword, "@", !GetAtt [ rds, Outputs.DatabaseClusterEndpointAddress ], "/", !Ref DatabaseName, "  --account-pass=", !Ref AdminPassword, " --account-mail=", !Ref AdminEmail, "\n",
+                    !Ref Directory, "/vendor/drush/drush/drush -y site-install ", !Ref InstallProfile, " --db-url=mysql://", !Ref DatabaseMasterUsername, ":", !Ref DatabaseMasterPassword, "@", !Ref DatabaseClusterEndpointAddress, "/", !Ref DatabaseName, "  --account-pass=", !Ref AdminPassword, " --account-mail=", !Ref AdminEmail, "\n",
                     "# run a cache rebuild for safety\n",
                     !Ref Directory, "/vendor/drush/drush/drush -y cr\n",
                     "# set permissions of drupal site directories\n", 
