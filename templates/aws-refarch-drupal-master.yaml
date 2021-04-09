@@ -35,6 +35,7 @@ Metadata:
         default: Drupal Parameters
       Parameters:
         - Title
+        - ComposerProject
         - AdminUsername
         - AdminPassword
         - AdminEmail
@@ -74,6 +75,8 @@ Metadata:
         default: Web Tier Instance Type
       Title:
         default: Site Title
+      ComposerProject:
+        default: Composer Project Namespace
       AdminUsername:
         default: Admin Username
       AdminPassword:
@@ -103,7 +106,7 @@ Parameters:
       - db.r3.4xlarge
       - db.r3.8xlarge
     ConstraintDescription: Must be a valid RDS instance class.
-    Default: db.t2.medium
+    Default: db.t2.small
     Description: The Amazon RDS database instance class.
     Type: String
   DatabaseMasterUsername:
@@ -145,7 +148,7 @@ Parameters:
       - cache.r3.4xlarge
       - cache.r3.8xlarge
     ConstraintDescription: Must be a valid Amazon ElastiCache node type.
-    Default: cache.t2.medium
+    Default: cache.t2.micro
     Description: The Amazon ElastiCache cluster node type.
     Type: String
   KeyName:
@@ -186,13 +189,13 @@ Parameters:
   WebAsgMax:
     AllowedPattern: ^((?!0$)[1-2]?[0-9]|30)$
     ConstraintDescription: Must be a number between 1 and 30.
-    Default: 4
+    Default: 2
     Description: Specifies the maximum number of EC2 instances in the Web Autoscaling Group.
     Type: String
   WebAsgMin:
     AllowedPattern: ^([0-0]?[0-9]|10)$
     ConstraintDescription: Must be a number between 0 and 10.
-    Default: 2
+    Default: 1
     Description: Specifies the minimum number of EC2 instances in the Web Autoscaling Group.
     Type: String
   WebInstanceType:
@@ -216,7 +219,7 @@ Parameters:
       - r3.4xlarge
       - r3.8xlarge
     ConstraintDescription: Must be a valid Amazon EC2 instance type.
-    Default: t2.large
+    Default: t2.micro
     Description: The Amazon EC2 instance type for your web instances.
     Type: String
   AdminEmail:
@@ -249,6 +252,11 @@ Parameters:
     Default: This is a new Drupal site on Amazon Web Services
     AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9 _-]*)([a-zA-Z0-9])$
     Description: The Drupal website title.
+    Type: String
+  ComposerProject:
+    Default: localgovdrupal/localgov-project
+    AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9\/ _-]*)([a-zA-Z0-9])$
+    Description: The composer project to install.
     Type: String
 
 Conditions:
@@ -459,7 +467,9 @@ Resources:
           !Ref Locale
         Title:
           !Ref Title
-      TemplateURL: https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-04-web.yaml
+        ComposerProject:
+          !Ref CompposerProject
+      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-04-web.yaml
 
 Outputs:
 
