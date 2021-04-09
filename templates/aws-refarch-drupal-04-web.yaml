@@ -353,9 +353,12 @@ Resources:
               awslogs: []
               httpd24: []
               mysql56: []
-              php70: []
-              php70-mysqlnd: []
-              php70-gd: []
+              php73: []
+              php73-mysqlnd: []
+              php73-gd: []
+              php73-pdo: []
+              php73-mbstring: []
+              git: []
           files:
             /tmp/create_site_conf.sh:
               content:
@@ -389,10 +392,10 @@ Resources:
               cwd: /tmp
               ignoreErrors: false
             install_composer:
-              command: mv /tmp/composer.phar /usr/local/bin/
+              command: mv /tmp/composer.phar /usr/local/bin/composer
               ignoreErrors: false
             set_composer_perms:
-              command: chmod +x composer.phar
+              command: chmod +x composer
               cwd: /usr/local/bin
               ignoreErrors: false
         build_cacheclient:
@@ -447,7 +450,8 @@ Resources:
                     "#!/bin/bash -xe\n",
                     "\n",
                     "   cd /var/www/drupal/\n",
-                    "   composer create-project localgovdrupal/localgov-project ", !Ref Directory, " --remove-vcs\n",
+                    "   # no 'stable' version of LocalGovDrupal yet\n",
+                    "   export COMPOSER_ALLOW_SUPERUSER=1; composer create-project --stability dev localgovdrupal/localgov-project ", !Ref Directory, " --remove-vcs\n",
                     "   # set permissions of drupal site directories\n", 
                     "   chown -R apache:apache /var/www/drupal/", !Ref Directory, "/web\n",
                     "   if [ ! -f /var/www/drupal/", !Ref Directory, "/web/opcache-instanceid.php ]; then\n",
