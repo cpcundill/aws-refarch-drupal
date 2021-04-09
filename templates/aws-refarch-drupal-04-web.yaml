@@ -413,7 +413,7 @@ Resources:
               ignoreErrors: false
             set_composer_perms:
               command: chmod +x composer
-              cwd: /usr/local/bin
+              cwd: /usr/bin
               ignoreErrors: false
         build_cacheclient:
           packages:
