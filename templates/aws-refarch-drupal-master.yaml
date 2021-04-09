@@ -36,6 +36,8 @@ Metadata:
       Parameters:
         - Title
         - ComposerProject
+        - ComposerUseDev
+        - InstallProfile
         - AdminUsername
         - AdminPassword
         - AdminEmail
@@ -89,6 +91,10 @@ Metadata:
         default: Site Domain
       Locale:
         default: Language Code
+      ComposerUseDev:
+        default: Composer Build Type
+      InstallProfile:
+        default: Install Profile
 
 Parameters:
 
@@ -253,10 +259,22 @@ Parameters:
     AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9 _-]*)([a-zA-Z0-9])$
     Description: The Drupal website title.
     Type: String
+  InstallProfile:
+    Default: localgov
+    AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9 _-]*)([a-zA-Z0-9])$
+    Description: The Drupal install profile to use.
+    Type: String
   ComposerProject:
     Default: localgovdrupal/localgov-project
     AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9\/ _-]*)([a-zA-Z0-9])$
     Description: The composer project to install.
+    Type: String
+  ComposerUseDev:
+    AllowedValues:
+      - True
+      - False
+    Default: True
+    Description: Specifies whether Composer should use a dev version when installing Drupal.
     Type: String
 
 Conditions:
@@ -469,6 +487,10 @@ Resources:
           !Ref Title
         ComposerProject:
           !Ref ComposerProject
+        ComposerUseDev:
+          !Ref ComposerUseDev
+        InstallProfile:
+          !Ref InstallProfile
       TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-04-web.yaml
 
 Outputs:
