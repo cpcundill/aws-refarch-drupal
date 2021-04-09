@@ -25,6 +25,7 @@ Metadata:
         default: Drupal Parameters
       Parameters:
         - Title
+        - ComposerProject
         - DomainName
         - Directory
         - AdminUsername
@@ -89,6 +90,8 @@ Metadata:
         default: Language Code
       Title:
         default: Site Title
+      ComposerProject:
+        default: Composer Project Namespace
 
 Parameters:
 
@@ -140,13 +143,13 @@ Parameters:
   WebAsgMax:
     AllowedPattern: ^((?!0$)[1-2]?[0-9]|30)$
     ConstraintDescription: Must be a number between 1 and 30.
-    Default: 4
+    Default: 2
     Description: Specifies the maximum number of EC2 instances in the Web Autoscaling Group.
     Type: String
   WebAsgMin:
     AllowedPattern: ^([0-0]?[0-9]|10)$
     ConstraintDescription: Must be a number between 0 and 10.
-    Default: 2
+    Default: 1
     Description: Specifies the minimum number of EC2 instances in the Web Autoscaling Group.
     Type: String
   WebInstanceType:
@@ -170,7 +173,7 @@ Parameters:
       - r3.4xlarge
       - r3.8xlarge
     ConstraintDescription: Must be a valid Amazon EC2 instance type.
-    Default: t2.large
+    Default: t2.micro
     Description: The Amazon EC2 instance type for your web instances.
     Type: String
   WebSecurityGroup:
@@ -214,6 +217,11 @@ Parameters:
   Title:
     AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9 _-]*)([a-zA-Z0-9])$
     Description: The Drupal website title.
+    Type: String
+  ComposerProject:
+    Default: localgovdrupal/localgov-project
+    AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9\/ _-]*)([a-zA-Z0-9])$
+    Description: The composer project to install.
     Type: String
 
 Conditions:
