@@ -409,7 +409,7 @@ Resources:
               cwd: /tmp
               ignoreErrors: false
             install_composer:
-              command: mv /tmp/composer.phar /usr/local/bin/composer
+              command: mv /tmp/composer.phar /usr/bin/composer
               ignoreErrors: false
             set_composer_perms:
               command: chmod +x composer
