@@ -428,6 +428,7 @@ Resources:
                     "   cd /var/www/drupal/\n",
                     "   # no 'stable' version of LocalGovDrupal yet\n",
                     "   export COMPOSER_ALLOW_SUPERUSER=1; composer create-project --stability dev ", !Ref ComposerProject, " ", !Ref Directory, " --remove-vcs\n",
+                    "   ", !Ref Directory, "/vendor/drush/drush/drush -y site-install localgov --db-url=mysql://", !Ref DatabaseMasterUsername, ":", !Ref DatabaseMasterPassword, "@", !GetAtt [ rds, Outputs.DatabaseClusterEndpointAddress ], "/", !Ref DatabaseName, "  --account-pass=", !Ref AdminPassword, " --account-mail=", !Ref AdminEmail, "\n",
                     "   # set permissions of drupal site directories\n", 
                     "   chown -R apache:apache /var/www/drupal/", !Ref Directory, "/web\n",
                     "fi\n"
