@@ -342,10 +342,8 @@ Resources:
             - install_composer
             - build_cacheclient
             - build_drupal
-            - build_opcache
             - install_cacheclient
             - install_drupal
-            - install_opcache
             - start_webserver
         install_webserver:
           packages:
@@ -358,6 +356,7 @@ Resources:
               php73-gd: []
               php73-pdo: []
               php73-mbstring: []
+              php73-opcache: []
               git: []
           files:
             /tmp/create_site_conf.sh:
@@ -418,29 +417,6 @@ Resources:
               mode: 000500
               owner: root
               group: root
-        build_opcache:
-          packages:
-            yum:
-              php70-opcache: []
-          files:
-            /tmp/install_opcache.sh:
-              content:
-                !Sub |
-                  #!/bin/bash -xe
-                  # create hidden opcache directory locally & change owner to apache
-                  if [ ! -d /var/www/.opcache ]; then                    
-                      mkdir -p /var/www/.opcache
-                  fi
-                  # enable opcache in /etc/php-7.0.d/10-opcache.ini
-                  sed -i 's/;opcache.file_cache=.*/opcache.file_cache=\/var\/www\/.opcache/' /etc/php-7.0.d/10-opcache.ini
-                  sed -i 's/opcache.memory_consumption=.*/opcache.memory_consumption=512/' /etc/php-7.0.d/10-opcache.ini
-                  # download opcache-instance.php to verify opcache status
-                  if [ ! -f /var/www/drupal/${Directory}/web/opcache-instanceid.php ]; then
-                      aws s3 cp 's3://aws-refarch/drupal/latest/bits/opcache-instanceid.php' /var/www/drupal/${Directory}/web/.
-                  fi
-              mode: 000500
-              owner: root
-              group: root
         build_drupal:
           files:
             /tmp/install_drupal.sh:
@@ -454,9 +430,6 @@ Resources:
                     "   export COMPOSER_ALLOW_SUPERUSER=1; composer create-project --stability dev localgovdrupal/localgov-project ", !Ref Directory, " --remove-vcs\n",
                     "   # set permissions of drupal site directories\n", 
                     "   chown -R apache:apache /var/www/drupal/", !Ref Directory, "/web\n",
-                    "   if [ ! -f /var/www/drupal/", !Ref Directory, "/web/opcache-instanceid.php ]; then\n",
-                    "     aws s3 cp 's3://aws-refarch/wordpress/latest/bits/opcache-instanceid.php' /var/www/drupal/", !Ref Directory, "/web/.\n",
-                    "   fi\n",
                     "fi\n"
                   ]
                 ]
@@ -473,12 +446,6 @@ Resources:
           commands:
             install_cacheclient:
               command: ./install_cacheclient.sh
-              cwd: /tmp
-              ignoreErrors: false
-        install_opcache:
-          commands:
-            install_opcache:
-              command: ./install_opcache.sh
               cwd: /tmp
               ignoreErrors: false
         start_webserver:
@@ -510,8 +477,3 @@ Resources:
             sleep 600
             /opt/aws/bin/cfn-signal --exit-code $? --stack ${AWS::StackName} --resource WebAutoScalingGroup --region ${AWS::Region}
             service httpd restart
-
-Outputs:
-
-  Opcachestatus:
-    Value: !Join [ '', [ !Ref PublicAlbHostname, '/opcache-instanceid.php' ] ]
