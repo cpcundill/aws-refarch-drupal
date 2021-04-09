@@ -427,7 +427,7 @@ Resources:
                     "\n",
                     "   cd /var/www/drupal/\n",
                     "   # no 'stable' version of LocalGovDrupal yet\n",
-                    "   export COMPOSER_ALLOW_SUPERUSER=1; composer create-project --stability dev localgovdrupal/localgov-project ", !Ref Directory, " --remove-vcs\n",
+                    "   export COMPOSER_ALLOW_SUPERUSER=1; composer create-project --stability dev ", !Ref ComposerProject, " ", !Ref Directory, " --remove-vcs\n",
                     "   # set permissions of drupal site directories\n", 
                     "   chown -R apache:apache /var/www/drupal/", !Ref Directory, "/web\n",
                     "fi\n"
