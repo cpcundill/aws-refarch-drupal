@@ -468,7 +468,7 @@ Resources:
         Title:
           !Ref Title
         ComposerProject:
-          !Ref CompposerProject
+          !Ref ComposerProject
       TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-04-web.yaml
 
 Outputs:
