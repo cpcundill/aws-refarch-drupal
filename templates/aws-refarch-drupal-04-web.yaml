@@ -367,10 +367,7 @@ Resources:
         prepare_php:
           commands:
             enable_php_74:
-              command: 'amazon-linux-extras enable php7.4'
-              test: "[ ! grep -Fxq '[amzn2extra-php7.4]' /etc/yum.repos.d/amzn2-extras.repo ]"
-            clean_yum:
-              command: 'yum clean metadata'
+              command: 'amazon-linux-extras enable php7.4; yum clean metadata'
         install_webserver:
           packages:
             yum:
@@ -413,14 +410,14 @@ Resources:
               ignoreErrors: false
         install_composer:
           commands:
-            download_composer:
+            a_download_composer:
               command: wget https://getcomposer.org/download/2.0.12/composer.phar
               cwd: /tmp
               ignoreErrors: false
-            install_composer:
+            b_install_composer:
               command: mv /tmp/composer.phar /usr/bin/composer
               ignoreErrors: false
-            set_composer_perms:
+            c_set_composer_perms:
               command: chmod +x composer
               cwd: /usr/bin
               ignoreErrors: false
