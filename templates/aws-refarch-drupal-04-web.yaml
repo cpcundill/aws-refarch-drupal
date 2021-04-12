@@ -376,7 +376,7 @@ Resources:
             yum:
               awslogs: []
               httpd: []
-              mysql56: []
+              mariadb: []
               php: []
               php-mysqlnd: []
               php-gd: []
