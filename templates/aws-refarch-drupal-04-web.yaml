@@ -356,6 +356,7 @@ Resources:
       AWS::CloudFormation::Init:
         configSets:
           deploy_webserver:
+            - prepare_php
             - install_webserver
             - install_composer
             - build_cacheclient
@@ -363,18 +364,26 @@ Resources:
             - install_cacheclient
             - install_drupal
             - start_webserver
+        prepare_php:
+          commands:
+            enable_php_74:
+              command: 'amazon-linux-extras enable php7.4'
+              test: "[ ! grep -Fxq '[amzn2extra-php7.4]' /etc/yum.repos.d/amzn2-extras.repo ]"
+            clean_yum:
+              command: 'yum clean metadata'
         install_webserver:
           packages:
             yum:
               awslogs: []
-              httpd24: []
+              httpd: []
               mysql56: []
-              php73: []
-              php73-mysqlnd: []
-              php73-gd: []
-              php73-pdo: []
-              php73-mbstring: []
-              php73-opcache: []
+              php: []
+              php-mysqlnd: []
+              php-gd: []
+              php-pdo: []
+              php-mbstring: []
+              php-opcache: []
+              php-pecl-memcached: []
               git: []
           files:
             /tmp/create_site_conf.sh:
@@ -425,15 +434,15 @@ Resources:
                 !Join [
                   "",[
                     "#!/bin/bash -xe\n",
-                    "wget https://elasticache-downloads.s3.amazonaws.com/ClusterClient/PHP-7.3/latest-64bit\n",
-                    "mv latest-64bit /tmp/AmazonElastiCacheClusterClient-PHP73-64bit-libmemcached.tar.gz\n",
-                    "tar -xf '/tmp/AmazonElastiCacheClusterClient-PHP73-64bit-libmemcached.tar.gz'\n",
-                    "cp '/tmp/amazon-elasticache-cluster-client.so' /usr/lib64/php/7.3/modules/\n",
-                    "if [ ! -f /etc/php-7.3.d/50-memcached.ini ]; then\n",
-                    "  touch /etc/php-7.3.d/50-memcached.ini\n",
+                    "wget https://elasticache-downloads.s3.amazonaws.com/ClusterClient/PHP-7.4/latest-64bit-X86\n",
+                    "mv latest-64bit-X86 /tmp/AmazonElastiCacheClusterClient-PHP74-64bit-libmemcached.tar.gz\n",
+                    "tar -xf '/tmp/AmazonElastiCacheClusterClient-PHP74-64bit-libmemcached.tar.gz'\n",
+                    "cp '/tmp/amazon-elasticache-cluster-client.so' /usr/lib64/php/modules/\n",
+                    "if [ ! -f /etc/php.d/50-memcached.ini ]; then\n",
+                    "  touch /etc/php.d/50-memcached.ini\n",
                     "fi\n",
-                    "sed -i '3i extension=/usr/lib64/php/7.3/modules/amazon-elasticache-cluster-client.so;' /etc/php-7.3.d/50-memcached.ini\n",
-                    "sed -i '3i extension=igbinary.so;' /etc/php-7.3.d/50-memcached.ini\n",
+                    "sed -i '3i extension=/usr/lib64/php/modules/amazon-elasticache-cluster-client.so;' /etc/php.d/50-memcached.ini\n",
+                    "sed -i '3i extension=igbinary.so;' /etc/php.d/50-memcached.ini\n",
                   ]
                 ]
               mode: 000500
