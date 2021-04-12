@@ -277,7 +277,7 @@ Mappings:
     eu-central-1:
       AMI: ami-82be18ed
     eu-west-1:
-      AMI: ami-d7b9a2b1
+      AMI: ami-0ffea00000f287d30
     eu-west-2:
       AMI: ami-ed100689
     sa-east-1:
