@@ -381,6 +381,7 @@ Resources:
               php-mbstring: []
               php-opcache: []
               php-pecl-memcached: []
+              php-xml: []
               git: []
           files:
             /tmp/create_site_conf.sh:
