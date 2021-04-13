@@ -439,7 +439,6 @@ Resources:
                     "  touch /etc/php.d/50-memcached.ini\n",
                     "fi\n",
                     "sed -i '3i extension=/usr/lib64/php/modules/amazon-elasticache-cluster-client.so;' /etc/php.d/50-memcached.ini\n",
-                    "sed -i '3i extension=igbinary.so;' /etc/php.d/50-memcached.ini\n",
                   ]
                 ]
               mode: 000500
