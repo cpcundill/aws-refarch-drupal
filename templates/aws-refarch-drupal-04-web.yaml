@@ -454,15 +454,23 @@ Resources:
                   "",[
                     "#!/bin/bash -xe\n",
                     "\n",
-                    "cd /var/www/drupal/\n",
+                    "# create drupal install user\n",
+                    "useradd -g apache drupal\n",
+                    "# set ownership and perms on application directory\n",
+                    "chmod 775 /var/www/drupal\n",
+                    "chown apache:apache /var/www/drupal\n",
+                    "# enable PHP logging to journald\n",
+                    "sed -i 's/;error_log = syslog/error_log = syslog/g' /etc/php.ini\n",
+                    "# run composer with drupal user\n",
                     "# no 'stable' version of LocalGovDrupal yet\n",
-                    "export COMPOSER_ALLOW_SUPERUSER=1; composer create-project --stability dev ", !Ref ComposerProject, " ", !Ref Directory, " --remove-vcs\n",
+                    "cd /var/www/drupal/\n",
+                    "su -c 'composer create-project --stability dev ", !Ref ComposerProject, " ", !Ref Directory, " --remove-vcs' drupal\n",
+                    "# delete any settings.php files already there\n",
+                    "rm -Rf ", !Ref Directory, "/web/sites/*/settings.*\n",
                     "# install the site with drush\n",
-                    !Ref Directory, "/vendor/drush/drush/drush -y site-install ", !Ref InstallProfile, " --db-url=mysql://", !Ref DatabaseMasterUsername, ":", !Ref DatabaseMasterPassword, "@", !Ref DatabaseClusterEndpointAddress, "/", !Ref DatabaseName, "  --account-pass=", !Ref AdminPassword, " --account-mail=", !Ref AdminEmail, "\n",
+                    "su -c '", !Ref Directory, "/vendor/drush/drush/drush -y site-install ", !Ref InstallProfile, " --db-url=mysql://", !Ref DatabaseMasterUsername, ":", !Ref DatabaseMasterPassword, "@", !Ref DatabaseClusterEndpointAddress, "/", !Ref DatabaseName, "  --account-pass=", !Ref AdminPassword, " --account-mail=", !Ref AdminEmail, "' drupal\n",
                     "# run a cache rebuild for safety\n",
-                    !Ref Directory, "/vendor/drush/drush/drush -y cr\n",
-                    "# set permissions of drupal site directories\n", 
-                    "chown -R apache:apache /var/www/drupal/", !Ref Directory, "/web\n"
+                    "su -c '", !Ref Directory, "/vendor/drush/drush/drush -y cr' drupal\n"
                   ]
                 ]
               mode: 000500
