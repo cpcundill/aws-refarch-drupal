@@ -440,7 +440,7 @@ Resources:
                     "if [ ! -f /etc/php.d/50-memcached.ini ]; then\n",
                     "  touch /etc/php.d/50-memcached.ini\n",
                     "fi\n",
-                    "sed -i 's/memcached.so/\/usr\/lib64\/php\/modules\/amazon-elasticache-cluster-client.so/g' /etc/php.d/50-memcached.ini\n"
+                    "sed -i 's/memcached.so/\\/usr\\/lib64\\/php\\/modules\\/amazon-elasticache-cluster-client.so/g' /etc/php.d/50-memcached.ini\n"
                   ]
                 ]
               mode: 000500
