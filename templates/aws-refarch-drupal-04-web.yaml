@@ -478,7 +478,7 @@ Resources:
                     "fi\n",
                     "\n",
                     "# run a cache rebuild for safety\n",
-                    "su -c '/var/www/drupal/", !Ref Directory, "/vendor/drush/drush/drush -y cr' drupal\n"
+                    "su -c '/var/www/drupal/", !Ref Directory, "/vendor/drush/drush/drush -y cr' -s /bin/bash apache\n"
                   ]
                 ]
               mode: 000500
