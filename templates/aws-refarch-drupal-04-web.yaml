@@ -382,6 +382,7 @@ Resources:
               php-mbstring: []
               php-opcache: []
               php-pecl-memcached: []
+              php-pecl-apcu: []
               php-xml: []
               git: []
           files:
