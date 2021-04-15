@@ -460,7 +460,7 @@ Resources:
                     "\n",
                     "# sleep for a random number of seconds up to 60 to avoid running composer simultaneously on first install\n",
                     "sleep $((RANDOM % 60))\n",
-                    "# if vendor doesn't exist then build Drupal\n",
+                    "# if target directory doesn't exist then build Drupal\n",
                     "if [ ! -d /var/www/drupal/", !Ref Directory, " ]; then\n",
                     "  # create drupal install user\n",
                     "  useradd -g apache drupal\n",
@@ -477,6 +477,12 @@ Resources:
                     "  su -c '", !Ref Directory, "/vendor/drush/drush/drush -y site-install ", !Ref InstallProfile, " --db-url=mysql://", !Ref DatabaseMasterUsername, ":", !Ref DatabaseMasterPassword, "@", !Ref DatabaseClusterEndpointAddress, "/", !Ref DatabaseName, "  --account-pass=", !Ref AdminPassword, " --account-mail=", !Ref AdminEmail, "' drupal\n",
                     "  # run a cache rebuild for safety\n",
                     "  su -c '/var/www/drupal/", !Ref Directory, "/vendor/drush/drush/drush -y cr' drupal\n",
+                    "else\n",
+                    "  # wait until Drupal is built so Apache restart step doesn't fail\n",
+                    "  until [ -d /var/www/drupal/", !Ref Directory, "/web ]\n",
+                    "  do\n",
+                    "    sleep 30\n",
+                    "  done\n",
                     "fi\n"
                   ]
                 ]
