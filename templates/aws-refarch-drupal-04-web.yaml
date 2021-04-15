@@ -439,7 +439,7 @@ Resources:
                     "tar -xf '/tmp/AmazonElastiCacheClusterClient-PHP74-64bit-libmemcached.tar.gz'\n",
                     "cp '/tmp/amazon-elasticache-cluster-client.so' /usr/lib64/php/modules/\n",
                     "if [ ! -f /etc/php.d/50-memcached.ini ]; then\n",
-                    "  touch /etc/php.d/50-memcached.ini\n",
+                    "  echo 'extension=/usr/lib64/php/modules/amazon-elasticache-cluster-client.so' > /etc/php.d/50-memcached.ini\n",
                     "fi\n",
                     "sed -i 's/memcached.so/\\/usr\\/lib64\\/php\\/modules\\/amazon-elasticache-cluster-client.so/g' /etc/php.d/50-memcached.ini\n"
                   ]
