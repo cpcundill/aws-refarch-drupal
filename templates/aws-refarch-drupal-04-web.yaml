@@ -465,6 +465,8 @@ Resources:
                     "  # set ownership and perms on application directory\n",
                     "  chmod 775 /var/www/drupal\n",
                     "  chown apache:apache /var/www/drupal\n",
+                    "  # sleep for a random number of seconds up to 60 to avoid running composer simultaneously on first install\n,
+                    "  sleep $((RANDOM % 60))\n",
                     "  # run composer with drupal user\n",
                     "  # no 'stable' version of LocalGovDrupal yet\n",
                     "  cd /var/www/drupal/\n",
