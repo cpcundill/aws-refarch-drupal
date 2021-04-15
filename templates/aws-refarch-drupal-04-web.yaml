@@ -475,10 +475,9 @@ Resources:
                     "  rm -Rf ", !Ref Directory, "/web/sites/*/settings.*\n",
                     "  # install the site with drush\n",
                     "  su -c '", !Ref Directory, "/vendor/drush/drush/drush -y site-install ", !Ref InstallProfile, " --db-url=mysql://", !Ref DatabaseMasterUsername, ":", !Ref DatabaseMasterPassword, "@", !Ref DatabaseClusterEndpointAddress, "/", !Ref DatabaseName, "  --account-pass=", !Ref AdminPassword, " --account-mail=", !Ref AdminEmail, "' drupal\n",
-                    "fi\n",
-                    "\n",
-                    "# run a cache rebuild for safety\n",
-                    "su -c '/var/www/drupal/", !Ref Directory, "/vendor/drush/drush/drush -y cr' -s /bin/bash apache\n"
+                    "  # run a cache rebuild for safety\n",
+                    "  su -c '/var/www/drupal/", !Ref Directory, "/vendor/drush/drush/drush -y cr' drupal\n",
+                    "fi\n"
                   ]
                 ]
               mode: 000500
