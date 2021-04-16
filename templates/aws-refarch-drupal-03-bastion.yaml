@@ -62,33 +62,33 @@ Mappings:
 
   RegionMap:
     ap-northeast-1:
-      AMI: ami-56d4ad31
+      AMI: ami-06098fd00463352b6
     ap-northeast-2:
-      AMI: ami-dac312b4
+      AMI: ami-07464b2b9929898f8
     ap-south-1:
-      AMI: ami-f9daac96
+      AMI: ami-0bcf5425cdc1d8a85
     ap-southeast-1:
-      AMI: ami-dc9339bf
+      AMI: ami-03ca998611da0fe12
     ap-southeast-2:
-      AMI: ami-1c47407f
+      AMI: ami-06202e06492f46177
     ca-central-1:
-      AMI: ami-ebed508f
+      AMI: ami-09934b230a2c41883
     eu-central-1:
-      AMI: ami-af0fc0c0
+      AMI: ami-0db9040eb3ab74509
     eu-west-1:
-      AMI: ami-70edb016
+      AMI: ami-0ffea00000f287d30
     eu-west-2:
-      AMI: ami-f1949e95
+      AMI: ami-0fbec3e0504ee1970
     sa-east-1:
-      AMI: ami-80086dec
+      AMI: ami-0c27c96aaa148ba6d
     us-east-1:
-      AMI: ami-0b33d91d
+      AMI: ami-0742b4e673072066f
     us-east-2:
-      AMI: ami-c55673a0
+      AMI: ami-05d72852800cbf29e
     us-west-1:
-      AMI: ami-165a0876
+      AMI: ami-0577b787189839998
     us-west-2:
-      AMI: ami-f173cc91
+      AMI: ami-0518bb0e75d3619ca
 
 Resources:
 
@@ -117,7 +117,7 @@ Resources:
       IamInstanceProfile: !Ref BastionInstanceProfile
       ImageId: !FindInMap [ RegionMap, !Ref 'AWS::Region', AMI ]
       InstanceMonitoring: true
-      InstanceType: t2.large
+      InstanceType: t3.medium
       KeyName: !Ref KeyName
       SecurityGroups:
         - !Ref BastionSecurityGroup
