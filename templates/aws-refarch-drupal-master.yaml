@@ -15,10 +15,12 @@ Metadata:
     - Label:
         default: Database Parameters
       Parameters:
+        - UseRDSClusterBoolean
         - DatabaseInstanceType
         - DatabaseMasterUsername
         - DatabaseMasterPassword
         - DatabaseName
+        - MultiAZDatabase
         - UseElastiCacheBoolean
         - ElastiCacheNodeType
     - Label:
@@ -55,6 +57,8 @@ Metadata:
         default: DB Master Password
       DatabaseName:
         default: DB Name
+      MultiAZDatabase:
+        default: Create a multi-AZ instance?
       ElastiCacheNodeType:
         default: Cache Cluster Node Type
       PublicAlbAcmCertificate:
@@ -69,6 +73,8 @@ Metadata:
         default: Use a CDN (CloudFront)?
       UseRoute53Boolean:
         default: Create record set (Route53)?
+      UseRDSClusterBoolean:
+        default: Create an RDS cluster?
       WebAsgMax:
         default: Web ASG Max
       WebAsgMin:
@@ -134,6 +140,13 @@ Parameters:
     AllowedPattern: ^([a-zA-Z0-9]*)$
     Description: The Amazon RDS master database name.
     Type: String
+  MultiAZDatabase:
+    AllowedValues:
+      - True
+      - False
+    Default: False
+    Description: Specifies whether an RDS instance uses multiple Availability Zones (ignored if you select a cluster).
+    Type: String
   ElastiCacheNodeType:
     AllowedValues:
       - cache.t3.micro
@@ -187,6 +200,13 @@ Parameters:
       - False
     Default: True
     Description: Specifies whether a record set should be created in Route 53 for your Drupal domain name.
+    Type: String
+  UseRDSClusterBoolean:
+    AllowedValues:
+      - True
+      - False
+    Default: False
+    Description: Specifies whether to use an RDS cluster or a single instance.
     Type: String
   WebAsgMax:
     AllowedPattern: ^((?!0$)[1-2]?[0-9]|30)$
@@ -291,6 +311,8 @@ Conditions:
     !Equals [ True, !Ref UseCloudFrontBoolean ]
   DeployElastiCache:
     !Equals [ True, !Ref UseElastiCacheBoolean ]
+  DeployRDSCluster:
+    !Equals [ True, !Ref UseRDSClusterBoolean ]
 
 Resources:
 
@@ -383,8 +405,9 @@ Resources:
         Vpc:
           !GetAtt [ newvpc, Outputs.Vpc ]
       TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-03-publicalb.yaml
-  rds:
+  rdscluster:
     Condition: AvailableAWSRegion
+    Condition: DeployRDSCluster
     DependsOn: [ newvpc, securitygroups ]
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -405,7 +428,33 @@ Resources:
           !GetAtt [ newvpc, Outputs.DataSubnet1 ]
         DataSubnet2:
           !GetAtt [ newvpc, Outputs.DataSubnet2 ]
-      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-03-rds.yaml
+      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-03-rdscluster.yaml
+  rdsinstance:
+    Condition: AvailableAWSRegion
+    Condition: !Not DeployRDSCluster
+    DependsOn: [ newvpc, securitygroups ]
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        DatabaseInstanceType:
+          !Ref DatabaseInstanceType
+        DatabaseMasterUsername:
+          !Ref DatabaseMasterUsername
+        DatabaseMasterPassword:
+          !Ref DatabaseMasterPassword
+        DatabaseName:
+          !Ref DatabaseName
+        DatabaseSecurityGroup:
+          !GetAtt [ securitygroups, Outputs.DatabaseSecurityGroup ]
+        DataSubnet0:
+          !GetAtt [ newvpc, Outputs.DataSubnet0 ]
+        DataSubnet1:
+          !GetAtt [ newvpc, Outputs.DataSubnet1 ]
+        DataSubnet2:
+          !GetAtt [ newvpc, Outputs.DataSubnet2 ]
+        MultiAZDatabase:
+          !Ref MultiAZDatabase
+      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-03-rdsinstance.yaml
   route53:
     Condition: AvailableAWSRegion
     Condition: CreateRecordSet
@@ -437,8 +486,12 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
+        UseRDSClusterBoolean:
+          !Ref UseRDSClusterBoolean
         DatabaseClusterEndpointAddress:
-          !GetAtt [ rds, Outputs.DatabaseClusterEndpointAddress ]
+          !GetAtt [ rdscluster, Outputs.DatabaseClusterEndpointAddress ]
+        DatabaseInstanceEndpointAddress:
+          !GetAtt [ rdsinstance, Outputs.DatabaseClusterEndpointAddress ]
         DatabaseMasterUsername:
           !Ref DatabaseMasterUsername
         DatabaseMasterPassword:
