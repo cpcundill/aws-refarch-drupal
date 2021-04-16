@@ -313,6 +313,8 @@ Conditions:
     !Equals [ True, !Ref UseElastiCacheBoolean ]
   DeployRDSCluster:
     !Equals [ True, !Ref UseRDSClusterBoolean ]
+  DeployRDSInstance:
+    !Equals [ False, !Ref UseRDSClusterBoolean ]
 
 Resources:
 
@@ -431,7 +433,7 @@ Resources:
       TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-03-rdscluster.yaml
   rdsinstance:
     Condition: AvailableAWSRegion
-    Condition: !Not DeployRDSCluster
+    Condition: DeployRDSInstance
     DependsOn: [ newvpc, securitygroups ]
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -489,9 +491,7 @@ Resources:
         UseRDSClusterBoolean:
           !Ref UseRDSClusterBoolean
         DatabaseClusterEndpointAddress:
-          !GetAtt [ rdscluster, Outputs.DatabaseClusterEndpointAddress ]
-        DatabaseInstanceEndpointAddress:
-          !GetAtt [ rdsinstance, Outputs.DatabaseClusterEndpointAddress ]
+          !If [ DeployRDSCluster, !GetAtt [ rdscluster, Outputs.DatabaseClusterEndpointAddress ], !GetAtt [ rdsinstance, Outputs.DatabaseClusterEndpointAddress ] ]
         DatabaseMasterUsername:
           !Ref DatabaseMasterUsername
         DatabaseMasterPassword:

@@ -39,7 +39,6 @@ Metadata:
       Parameters:
         - UseRDSClusterBoolean
         - DatabaseClusterEndpointAddress
-        - DatabaseInstanceEndpointAddress
         - DatabaseName
         - DatabaseMasterUsername
         - DatabaseMasterPassword
@@ -52,8 +51,6 @@ Metadata:
         default: Create an RDS cluster?
       DatabaseClusterEndpointAddress:
         default: DB Cluster Endpoint Address
-      DatabaseInstanceEndpointAddress:
-        default: DB Instance Endpoint Address
       DatabaseMasterUsername:
         default: DB Master Username  
       DatabaseMasterPassword:
@@ -116,9 +113,6 @@ Parameters:
     Type: String
   DatabaseClusterEndpointAddress:
     Description: The RDS cluster endpoint address.
-    Type: String
-  DatabaseInstanceEndpointAddress:
-    Description: The RDS instance endpoint address.
     Type: String
   DatabaseMasterUsername:
     AllowedPattern: ^([a-zA-Z0-9]*)$
@@ -276,8 +270,6 @@ Conditions:
     ]
   NoDomainName:
     !Equals [ '', !Ref DomainName ]
-  DatabaseEndpointAddress:
-    - !If [!Ref UseRDSClusterBoolean, !Ref DatabaseClusterEndpointAddress, !Ref DatabaseInstanceEndpointAddress ]
 
 
 Mappings:
@@ -494,7 +486,7 @@ Resources:
                     "  # delete any settings.php files already there\n",
                     "  rm -Rf ", !Ref Directory, "/web/sites/*/settings.*\n",
                     "  # install the site with drush\n",
-                    "  su -c '", !Ref Directory, "/vendor/drush/drush/drush -y site-install ", !Ref InstallProfile, " --db-url=mysql://", !Ref DatabaseMasterUsername, ":", !Ref DatabaseMasterPassword, "@", !Ref DatabaseEndpointAddress, "/", !Ref DatabaseName, "  --account-pass=", !Ref AdminPassword, " --account-mail=", !Ref AdminEmail, "' drupal\n",
+                    "  su -c '", !Ref Directory, "/vendor/drush/drush/drush -y site-install ", !Ref InstallProfile, " --db-url=mysql://", !Ref DatabaseMasterUsername, ":", !Ref DatabaseMasterPassword, "@", !Ref DatabaseClusterEndpointAddress, "/", !Ref DatabaseName, "  --account-pass=", !Ref AdminPassword, " --account-mail=", !Ref AdminEmail, "' drupal\n",
                     "  # run a cache rebuild for safety\n",
                     "  su -c '/var/www/drupal/", !Ref Directory, "/vendor/drush/drush/drush -y cr' drupal\n",
                     "else\n",
