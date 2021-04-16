@@ -194,7 +194,7 @@ Parameters:
     AllowedValues:
       - True
       - False
-    Default: True
+    Default: False
     Description: Specifies whether a CloudFront Distribution should be created to serve the Drupal website content.
     Type: String
   UseElastiCacheBoolean:
@@ -208,7 +208,7 @@ Parameters:
     AllowedValues:
       - True
       - False
-    Default: True
+    Default: False
     Description: Specifies whether a record set should be created in Route 53 for your Drupal domain name.
     Type: String
   UseRDSClusterBoolean:
