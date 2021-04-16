@@ -1,7 +1,7 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: Reference Architecture to host Drupal on AWS - Creates VPC security groups
+Description: Creates VPC security groups for Drupal
 
 Metadata:
   AWS::CloudFormation::Interface:

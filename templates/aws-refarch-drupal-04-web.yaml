@@ -1,7 +1,7 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: Fork of the AWS Reference Architecture to host Drupal on AWS - Creates the LocalGovDrupal distro in a web Auto Scaling group
+Description: Creates a web Auto Scaling group and installs Drupal with composer
 
 Metadata:
 

@@ -1,7 +1,7 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: Reference Architecture to host Drupal on AWS - Creates ElastiCache cache cluster
+Description: Creates ElastiCache cache cluster for memcached (if selected)
 
 Metadata:
 
