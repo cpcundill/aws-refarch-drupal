@@ -13,6 +13,7 @@ Metadata:
         - DatabaseMasterUsername
         - DatabaseMasterPassword
         - DatabaseName
+        - DatabaseAllocatedStorage
         - DatabaseSecurityGroup
         - DataSubnet0
         - DataSubnet1
@@ -27,6 +28,8 @@ Metadata:
         default: DB Master Password
       DatabaseName:
         default: DB Name
+      DatabaseAllocatedStorage:
+        default: DB disk size
       DatabaseSecurityGroup:
         default: DB Security Group
       DataSubnet0:
@@ -72,6 +75,13 @@ Parameters:
     AllowedPattern: ^([a-zA-Z0-9]*)$
     Description: The Amazon RDS master database name.
     Type: String
+  DatabaseAllocatedStorage:
+    Default: '10'
+    Description: The size of the database in GiB (ignored if you select a cluster).
+    Type: Number
+    MinValue: '5'
+    MaxValue: '1024'
+    ConstraintDescription: must be between 20 and 65536 GiB.
   DatabaseSecurityGroup:
     Description: Select the database security group.
     Type: AWS::EC2::SecurityGroup::Id
@@ -114,11 +124,13 @@ Resources:
     Properties:
       DBInstanceClass: !Ref DatabaseInstanceType
       DBName: !Ref DatabaseName
-      Engine: aurora
+      AllocatedStorage: !Ref DatabaseAllocatedStorage
+      Engine: mariadb
+      EngineVersion: '10.5'
       MultiAZ: !Ref MultiAZDatabase
       MasterUsername: !Ref DatabaseMasterUsername
       MasterUserPassword: !Ref DatabaseMasterPassword
-      VpcSecurityGroupIds:
+      VPCSecurityGroups:
       - !Ref DatabaseSecurityGroup
       BackupRetentionPeriod: 30
       DBSubnetGroupName: !Ref DataSubnetGroup
