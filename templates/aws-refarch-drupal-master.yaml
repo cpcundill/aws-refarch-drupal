@@ -1,7 +1,7 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: Stack to deploy a highly available, elastic, scalable Drupal environment. This master stack launches multiple nested stacks for different tiers. !! This can only be run in certain AWS Regions - 'us-east-1', 'us-east-2', 'us-west-2', 'eu-west-1'.
+Description: Stack to deploy a highly available, elastic, scalable Drupal environment. This master stack launches multiple nested stacks for different tiers. !! This can only be run in certain AWS Regions - 'us-east-1', 'us-east-2', 'us-west-2', 'eu-west-1', 'eu-west-2'.
 
 Metadata:
 
@@ -15,10 +15,13 @@ Metadata:
     - Label:
         default: Database Parameters
       Parameters:
+        - UseRDSClusterBoolean
         - DatabaseInstanceType
         - DatabaseMasterUsername
         - DatabaseMasterPassword
         - DatabaseName
+        - DatabaseAllocatedStorage
+        - MultiAZDatabase
         - UseElastiCacheBoolean
         - ElastiCacheNodeType
     - Label:
@@ -35,6 +38,9 @@ Metadata:
         default: Drupal Parameters
       Parameters:
         - Title
+        - ComposerProject
+        - ComposerUseDev
+        - InstallProfile
         - AdminUsername
         - AdminPassword
         - AdminEmail
@@ -52,6 +58,10 @@ Metadata:
         default: DB Master Password
       DatabaseName:
         default: DB Name
+      DatabaseAllocatedStorage:
+        default: DB disk size
+      MultiAZDatabase:
+        default: Create a multi-AZ instance?
       ElastiCacheNodeType:
         default: Cache Cluster Node Type
       PublicAlbAcmCertificate:
@@ -66,6 +76,8 @@ Metadata:
         default: Use a CDN (CloudFront)?
       UseRoute53Boolean:
         default: Create record set (Route53)?
+      UseRDSClusterBoolean:
+        default: Create an RDS cluster?
       WebAsgMax:
         default: Web ASG Max
       WebAsgMin:
@@ -74,6 +86,8 @@ Metadata:
         default: Web Tier Instance Type
       Title:
         default: Site Title
+      ComposerProject:
+        default: Composer Project Namespace
       AdminUsername:
         default: Admin Username
       AdminPassword:
@@ -86,6 +100,10 @@ Metadata:
         default: Site Domain
       Locale:
         default: Language Code
+      ComposerUseDev:
+        default: Composer Build Type
+      InstallProfile:
+        default: Install Profile
 
 Parameters:
 
@@ -95,15 +113,15 @@ Parameters:
     Type: String
   DatabaseInstanceType:
     AllowedValues:
-      - db.t2.small
-      - db.t2.medium
-      - db.r3.large
-      - db.r3.xlarge
-      - db.r3.2xlarge
-      - db.r3.4xlarge
-      - db.r3.8xlarge
+      - db.t3.small
+      - db.t3.medium
+      - db.r5.large
+      - db.r5.xlarge
+      - db.r5.2xlarge
+      - db.r5.4xlarge
+      - db.r5.8xlarge
     ConstraintDescription: Must be a valid RDS instance class.
-    Default: db.t2.medium
+    Default: db.t3.small
     Description: The Amazon RDS database instance class.
     Type: String
   DatabaseMasterUsername:
@@ -125,27 +143,37 @@ Parameters:
     AllowedPattern: ^([a-zA-Z0-9]*)$
     Description: The Amazon RDS master database name.
     Type: String
+  DatabaseAllocatedStorage:
+    Default: '10'
+    Description: The size of the database in GiB (ignored if you select a cluster).
+    Type: Number
+    MinValue: '5'
+    MaxValue: '1024'
+    ConstraintDescription: must be between 20 and 65536 GiB.
+  MultiAZDatabase:
+    AllowedValues:
+      - True
+      - False
+    Default: False
+    Description: Specifies whether an RDS instance uses multiple Availability Zones (ignored if you select a cluster).
+    Type: String
   ElastiCacheNodeType:
     AllowedValues:
-      - cache.t2.micro
-      - cache.t2.small
-      - cache.t2.medium
-      - cache.m4.large
-      - cache.m4.xlarge
-      - cache.m4.2xlarge
-      - cache.m4.4xlarge
-      - cache.m4.10xlarge
-      - cache.m3.medium
-      - cache.m3.large
-      - cache.m3.xlarge
-      - cache.m3.2xlarge
-      - cache.r3.large
-      - cache.r3.xlarge
-      - cache.r3.2xlarge
-      - cache.r3.4xlarge
-      - cache.r3.8xlarge
+      - cache.t3.micro
+      - cache.t3.small
+      - cache.t3.medium
+      - cache.m5.large
+      - cache.m5.xlarge
+      - cache.m5.2xlarge
+      - cache.m5.4xlarge
+      - cache.m5.12xlarge
+      - cache.r5.large
+      - cache.r5.xlarge
+      - cache.r5.2xlarge
+      - cache.r5.4xlarge
+      - cache.r5.8xlarge
     ConstraintDescription: Must be a valid Amazon ElastiCache node type.
-    Default: cache.t2.medium
+    Default: cache.t3.small
     Description: The Amazon ElastiCache cluster node type.
     Type: String
   KeyName:
@@ -166,57 +194,65 @@ Parameters:
     AllowedValues:
       - True
       - False
-    Default: True
+    Default: False
     Description: Specifies whether a CloudFront Distribution should be created to serve the Drupal website content.
     Type: String
   UseElastiCacheBoolean:
     AllowedValues:
       - True
       - False
-    Default: True
+    Default: False
     Description: Specifies whether an ElastiCache Cache Cluster should be created to cache Drupal database content.
     Type: String
   UseRoute53Boolean:
     AllowedValues:
       - True
       - False
-    Default: True
+    Default: False
     Description: Specifies whether a record set should be created in Route 53 for your Drupal domain name.
+    Type: String
+  UseRDSClusterBoolean:
+    AllowedValues:
+      - True
+      - False
+    Default: False
+    Description: Specifies whether to use an RDS cluster or a single instance.
     Type: String
   WebAsgMax:
     AllowedPattern: ^((?!0$)[1-2]?[0-9]|30)$
     ConstraintDescription: Must be a number between 1 and 30.
-    Default: 4
+    Default: 2
     Description: Specifies the maximum number of EC2 instances in the Web Autoscaling Group.
     Type: String
   WebAsgMin:
     AllowedPattern: ^([0-0]?[0-9]|10)$
     ConstraintDescription: Must be a number between 0 and 10.
-    Default: 2
+    Default: 1
     Description: Specifies the minimum number of EC2 instances in the Web Autoscaling Group.
     Type: String
   WebInstanceType:
     AllowedValues:
-      - t2.micro
-      - t2.small
-      - t2.medium
-      - t2.large
-      - m4.large
-      - m4.xlarge
-      - m4.2xlarge
-      - m4.4xlarge
-      - m4.10xlarge
-      - m3.medium
-      - m3.large
-      - m3.xlarge
-      - m3.2xlarge
-      - r3.large
-      - r3.xlarge
-      - r3.2xlarge
-      - r3.4xlarge
-      - r3.8xlarge
+      - t3.micro
+      - t3.small
+      - t3.medium
+      - t3.large
+      - m5.large
+      - m5.xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - m5.8xlarge
+      - m5.12xlarge
+      - c5.large
+      - c5.xlarge
+      - c5.2xlarge
+      - c5.4xlarge
+      - r5.large
+      - r5.xlarge
+      - r5.2xlarge
+      - r5.4xlarge
+      - r5.8xlarge
     ConstraintDescription: Must be a valid Amazon EC2 instance type.
-    Default: t2.large
+    Default: t3.medium
     Description: The Amazon EC2 instance type for your web instances.
     Type: String
   AdminEmail:
@@ -250,6 +286,23 @@ Parameters:
     AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9 _-]*)([a-zA-Z0-9])$
     Description: The Drupal website title.
     Type: String
+  InstallProfile:
+    Default: localgov
+    AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9 _-]*)([a-zA-Z0-9])$
+    Description: The Drupal install profile to use.
+    Type: String
+  ComposerProject:
+    Default: localgovdrupal/localgov-project
+    AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9\/ _-]*)([a-zA-Z0-9])$
+    Description: The composer project to install.
+    Type: String
+  ComposerUseDev:
+    AllowedValues:
+      - True
+      - False
+    Default: True
+    Description: Specifies whether Composer should use a dev version when installing Drupal.
+    Type: String
 
 Conditions:
 
@@ -257,6 +310,7 @@ Conditions:
     !Or [
       !Equals [ !Ref 'AWS::Region', ap-southeast-2 ],
       !Equals [ !Ref 'AWS::Region', eu-west-1 ],
+      !Equals [ !Ref 'AWS::Region', eu-west-2 ],
       !Equals [ !Ref 'AWS::Region', us-east-1 ],
       !Equals [ !Ref 'AWS::Region', us-east-2 ],
       !Equals [ !Ref 'AWS::Region', us-west-2 ]
@@ -267,6 +321,10 @@ Conditions:
     !Equals [ True, !Ref UseCloudFrontBoolean ]
   DeployElastiCache:
     !Equals [ True, !Ref UseElastiCacheBoolean ]
+  DeployRDSCluster:
+    !Equals [ True, !Ref UseRDSClusterBoolean ]
+  DeployRDSInstance:
+    !Equals [ False, !Ref UseRDSClusterBoolean ]
 
 Resources:
 
@@ -286,7 +344,7 @@ Resources:
           !GetAtt [ newvpc, Outputs.PublicSubnet1 ]
         PublicSubnet2:
           !GetAtt [ newvpc, Outputs.PublicSubnet2 ]
-      TemplateURL: https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-03-bastion.yaml
+      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-03-bastion.yaml
   cloudfront:
     Condition: AvailableAWSRegion
     Condition: DeployCloudFront
@@ -300,7 +358,7 @@ Resources:
           !GetAtt [ publicalb, Outputs.PublicAlbDnsName ]
         DomainName:
           !Ref DomainName
-      TemplateURL: https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-04-cloudfront.yaml
+      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-04-cloudfront.yaml
   efs:
     Condition: AvailableAWSRegion
     DependsOn: [ newvpc, securitygroups ]
@@ -315,7 +373,7 @@ Resources:
           !GetAtt [ newvpc, Outputs.DataSubnet1 ]
         DataSubnet2:
           !GetAtt [ newvpc, Outputs.DataSubnet2 ]
-      TemplateURL: https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-03-efs.yaml
+      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-03-efs.yaml
   elasticache:
     Condition: AvailableAWSRegion
     Condition: DeployElastiCache
@@ -335,11 +393,11 @@ Resources:
           !Ref ElastiCacheNodeType
         ElastiCacheSecurityGroup:
           !GetAtt [ securitygroups, Outputs.ElastiCacheSecurityGroup ]
-      TemplateURL: https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-03-elasticache.yaml
+      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-03-elasticache.yaml
   newvpc:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-01-newvpc.yaml
+      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-01-newvpc.yaml
   publicalb:
     Condition: AvailableAWSRegion
     DependsOn: [ newvpc, securitygroups ]
@@ -358,9 +416,10 @@ Resources:
           !GetAtt [ securitygroups, Outputs.PublicAlbSecurityGroup ]
         Vpc:
           !GetAtt [ newvpc, Outputs.Vpc ]
-      TemplateURL: https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-03-publicalb.yaml
-  rds:
+      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-03-publicalb.yaml
+  rdscluster:
     Condition: AvailableAWSRegion
+    Condition: DeployRDSCluster
     DependsOn: [ newvpc, securitygroups ]
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -381,7 +440,35 @@ Resources:
           !GetAtt [ newvpc, Outputs.DataSubnet1 ]
         DataSubnet2:
           !GetAtt [ newvpc, Outputs.DataSubnet2 ]
-      TemplateURL: https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-03-rds.yaml
+      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-03-rdscluster.yaml
+  rdsinstance:
+    Condition: AvailableAWSRegion
+    Condition: DeployRDSInstance
+    DependsOn: [ newvpc, securitygroups ]
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        DatabaseInstanceType:
+          !Ref DatabaseInstanceType
+        DatabaseMasterUsername:
+          !Ref DatabaseMasterUsername
+        DatabaseMasterPassword:
+          !Ref DatabaseMasterPassword
+        DatabaseName:
+          !Ref DatabaseName
+        DatabaseAllocatedStorage:
+          !Ref DatabaseAllocatedStorage
+        DatabaseSecurityGroup:
+          !GetAtt [ securitygroups, Outputs.DatabaseSecurityGroup ]
+        DataSubnet0:
+          !GetAtt [ newvpc, Outputs.DataSubnet0 ]
+        DataSubnet1:
+          !GetAtt [ newvpc, Outputs.DataSubnet1 ]
+        DataSubnet2:
+          !GetAtt [ newvpc, Outputs.DataSubnet2 ]
+        MultiAZDatabase:
+          !Ref MultiAZDatabase
+      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-03-rdsinstance.yaml
   route53:
     Condition: AvailableAWSRegion
     Condition: CreateRecordSet
@@ -395,7 +482,7 @@ Resources:
           !If [ DeployCloudFront, 'Z2FDTNDATAQYW2', !GetAtt [ publicalb, Outputs.PublicAlbCanonicalHostedZoneId ] ]
         DomainName:
           !Ref DomainName
-      TemplateURL: https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-05-route53.yaml
+      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-05-route53.yaml
   securitygroups:
     Condition: AvailableAWSRegion
     DependsOn: newvpc
@@ -406,15 +493,17 @@ Resources:
           !Ref SshAccessCidr
         Vpc:
           !GetAtt [ newvpc, Outputs.Vpc ]
-      TemplateURL: https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-02-securitygroups.yaml
+      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-02-securitygroups.yaml
   web:
     Condition: AvailableAWSRegion
     DependsOn: [ efs, newvpc, publicalb, securitygroups ]
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
+        UseRDSClusterBoolean:
+          !Ref UseRDSClusterBoolean
         DatabaseClusterEndpointAddress:
-          !GetAtt [ rds, Outputs.DatabaseClusterEndpointAddress ]
+          !If [ DeployRDSCluster, !GetAtt [ rdscluster, Outputs.DatabaseClusterEndpointAddress ], !GetAtt [ rdsinstance, Outputs.DatabaseClusterEndpointAddress ] ]
         DatabaseMasterUsername:
           !Ref DatabaseMasterUsername
         DatabaseMasterPassword:
@@ -459,7 +548,13 @@ Resources:
           !Ref Locale
         Title:
           !Ref Title
-      TemplateURL: https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-04-web.yaml
+        ComposerProject:
+          !Ref ComposerProject
+        ComposerUseDev:
+          !Ref ComposerUseDev
+        InstallProfile:
+          !Ref InstallProfile
+      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-04-web.yaml
 
 Outputs:
 

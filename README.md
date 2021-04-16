@@ -1,16 +1,44 @@
-# Running Drupal on AWS
+# Running LocalGovDrupal on AWS
 
-This reference architecture provides a set of YAML templates for deploying Drupal on AWS using [Amazon Virtual Private Cloud (Amazon VPC)](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Introduction.html), [Amazon Elastic Compute Cloud (Amazon EC2)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/concepts.html), [Auto Scaling](http://docs.aws.amazon.com/autoscaling/latest/userguide/WhatIsAutoScaling.html), [Elastic Load Balancing (Application Load Balancer)](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html), [Amazon Relational Database Service (Amazon RDS)](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html), [Amazon ElastiCache](http://docs.aws.amazon.com/AmazonElastiCache/latest/UserGuide/WhatIs.html), [Amazon Elastic File System (Amazon EFS)](http://docs.aws.amazon.com/efs/latest/ug/whatisefs.html), [Amazon CloudFront](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html), [Amazon Route 53](http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/Welcome.html), [Amazon Certificate Manager (Amazon ACM)](http://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html)  with [AWS CloudFormation](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html).
+This project is forked from [the AWS project providing a reference architecture for Drupal](https://github.com/aws-samples/aws-refarch-drupal).
+
+It is modified from that fork to:
+
+* use PHP 7.4 instead of PHP 7.0
+* use the latest Amazon Linux 2 AMIs
+* use modern instance types
+* support cheaper RDS options for testing
+* install Drupal with `composer`
+* install the dependencies needed by [LocalGovDrupal](https://localgovdrupal.org/)
+* install [LocalGovDrupal](https://localgovdrupal.org/) itself via `drush`
 
 You can launch this CloudFormation stack, using your account, in the following AWS Regions:
 
 | AWS Region Code | Name | Launch |
 | --- | --- | --- 
-| us-east-1 |US East (N. Virginia)| [![cloudformation-launch-stack](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=Drupal&templateURL=https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-master.yaml) |
-| us-east-2 |US East (Ohio)| [![cloudformation-launch-stack](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?stackName=Drupal&templateURL=https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-master.yaml) |
-| us-west-2 |US West (Oregon)| [![cloudformation-launch-stack](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=Drupal&templateURL=https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-master.yaml) |
-| eu-west-1 |EU (Ireland)| [![cloudformation-launch-stack](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?stackName=Drupal&templateURL=https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-master.yaml) |
-| ap-southeast-2 |AP (Sydney)| [![cloudformation-launch-stack](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-2#/stacks/new?stackName=Drupal&templateURL=https://s3.amazonaws.com/aws-refarch/drupal/latest/templates/aws-refarch-drupal-master.yaml) |
+| us-east-1 |US East (N. Virginia)| [![cloudformation-launch-stack](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=LocalGovDrupal&templateURL=https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-master.yaml) |
+| us-east-2 |US East (Ohio)| [![cloudformation-launch-stack](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?stackName=LocalGovDrupal&templateURL=https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-master.yaml) |
+| us-west-2 |US West (Oregon)| [![cloudformation-launch-stack](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=LocalGovDrupal&templateURL=https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-master.yaml) |
+| eu-west-1 |EU (Ireland)| [![cloudformation-launch-stack](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?stackName=LocalGovDrupal&templateURL=https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-master.yaml) |
+| eu-west-2 |UK (London)| [![cloudformation-launch-stack](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-west-2#/stacks/new?stackName=LocalGovDrupal&templateURL=https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-master.yaml) |
+| ap-southeast-2 |AP (Sydney)| [![cloudformation-launch-stack](images/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-2#/stacks/new?stackName=LocalGovDrupal&templateURL=https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-master.yaml) |
+
+## Known Issues
+
+Installation takes a while (`composer install` then `drush si`) so you'll have to be quite patient - if you're still getting Bad Gateway after half an hour or so it's time to investigate, before then it could still be building, as the install process happens on initialization of the machines.
+
+Because of disk caching the initial cluster can fail to build if there is more than one web server (first one will "win" and second one will end in a bad state because the Apache start command won't get called). There is a random sleep to try and get around this, whereby both servers are asked to wait for a random delay up to 60 seconds. *Normally* this is sufficient to make sure they don't both try to `compose install` at the same time, but if it fails you can get Bad Gateway errors as one of the machines will be left in a bad state. In such cases just change your Autoscaling Group size and the newly generated machines should be fine. Alternatively, edit the Bastion ASG and spin up a bastion machine, SSH to it and from there you can hop on to the broken web server and start Apache with `sudo service httpd start`.
+
+Drupal is installed on EFS, which may be slow. This is the recommended approach by AWS, on the basis that CloudFront should be taking up most of the slack anyway. [There are known but clunky workarounds for slow EFS.](https://docs.aws.amazon.com/efs/latest/ug/performance.html)
+
+ElastiCache and the necessary Apache module are installed if you select that option, but the Drupal installation process does not do any memcached set-up, so if you want to make use of ElastiCache you'll need to manually set Drupal up. (AWS wrote docs on that you'll find below.)
+
+## Original AWS Documentation
+
+From this point onward everything is taken from the original AWS reference stack README.
+
+This reference architecture provides a set of YAML templates for deploying LocalGovDrupal on AWS using [Amazon Virtual Private Cloud (Amazon VPC)](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Introduction.html), [Amazon Elastic Compute Cloud (Amazon EC2)](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/concepts.html), [Auto Scaling](http://docs.aws.amazon.com/autoscaling/latest/userguide/WhatIsAutoScaling.html), [Elastic Load Balancing (Application Load Balancer)](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html), [Amazon Relational Database Service (Amazon RDS)](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Welcome.html), [Amazon ElastiCache](http://docs.aws.amazon.com/AmazonElastiCache/latest/UserGuide/WhatIs.html), [Amazon Elastic File System (Amazon EFS)](http://docs.aws.amazon.com/efs/latest/ug/whatisefs.html), [Amazon CloudFront](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html), [Amazon Route 53](http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/Welcome.html), [Amazon Certificate Manager (Amazon ACM)](http://docs.aws.amazon.com/acm/latest/userguide/acm-overview.html)  with [AWS CloudFormation](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/Welcome.html).
+
 
 ## Overview
 
@@ -241,7 +269,7 @@ Portions copyright.
 
 - Drupal is licensed under the GNU General Public License (GPLv2 or later).
 
-- OPcache is licensed under PHP License, version 3.01.
+- composer is licensed under the MIT License.
 
 Please see LICENSE.txt for applicable license terms and NOTICE.txt for applicable notices.
 

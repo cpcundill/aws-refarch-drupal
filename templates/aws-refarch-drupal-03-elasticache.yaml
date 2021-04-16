@@ -1,7 +1,7 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: Reference Architecture to host Drupal on AWS - Creates ElastiCache cache cluster
+Description: Creates ElastiCache cache cluster for memcached (if selected)
 
 Metadata:
 
@@ -47,25 +47,21 @@ Parameters:
     Type: String
   ElastiCacheNodeType:
     AllowedValues:
-      - cache.t2.micro
-      - cache.t2.small
-      - cache.t2.medium
-      - cache.m4.large
-      - cache.m4.xlarge
-      - cache.m4.2xlarge
-      - cache.m4.4xlarge
-      - cache.m4.10xlarge
-      - cache.m3.medium
-      - cache.m3.large
-      - cache.m3.xlarge
-      - cache.m3.2xlarge
-      - cache.r3.large
-      - cache.r3.xlarge
-      - cache.r3.2xlarge
-      - cache.r3.4xlarge
-      - cache.r3.8xlarge
+      - cache.t3.micro
+      - cache.t3.small
+      - cache.t3.medium
+      - cache.m5.large
+      - cache.m5.xlarge
+      - cache.m5.2xlarge
+      - cache.m5.4xlarge
+      - cache.m5.12xlarge
+      - cache.r5.large
+      - cache.r5.xlarge
+      - cache.r5.2xlarge
+      - cache.r5.4xlarge
+      - cache.r5.8xlarge
     ConstraintDescription: Must be a valid Amazon ElastiCache node type.
-    Default: cache.t2.medium
+    Default: cache.t3.small
     Description: The Amazon ElastiCache cluster node type.
     Type: String
   ElastiCacheSecurityGroup:
@@ -80,6 +76,7 @@ Conditions:
       !Equals [ !Ref 'AWS::Region', us-east-2 ],
       !Equals [ !Ref 'AWS::Region', us-west-2 ],
       !Equals [ !Ref 'AWS::Region', eu-west-1 ],
+      !Equals [ !Ref 'AWS::Region', eu-west-2 ],
       !Equals [ !Ref 'AWS::Region', sa-east-1 ],
       !Equals [ !Ref 'AWS::Region', ap-northeast-1 ],
       !Equals [ !Ref 'AWS::Region', ap-southeast-2 ]

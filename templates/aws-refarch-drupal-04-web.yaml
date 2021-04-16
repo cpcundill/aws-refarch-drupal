@@ -1,7 +1,7 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: Reference Architecture to host Drupal on AWS - Creates Drupal web Auto Scaling group
+Description: Creates a web Auto Scaling group and installs Drupal with composer
 
 Metadata:
 
@@ -25,6 +25,9 @@ Metadata:
         default: Drupal Parameters
       Parameters:
         - Title
+        - ComposerProject
+        - ComposerUseDev
+        - InstallProfile
         - DomainName
         - Directory
         - AdminUsername
@@ -34,6 +37,7 @@ Metadata:
     - Label:
         default: Database Parameters
       Parameters:
+        - UseRDSClusterBoolean
         - DatabaseClusterEndpointAddress
         - DatabaseName
         - DatabaseMasterUsername
@@ -43,6 +47,8 @@ Metadata:
       Parameters:
         - ElasticFileSystem
     ParameterLabels:
+      UseRDSClusterBoolean:
+        default: Create an RDS cluster?
       DatabaseClusterEndpointAddress:
         default: DB Cluster Endpoint Address
       DatabaseMasterUsername:
@@ -89,9 +95,22 @@ Metadata:
         default: Language Code
       Title:
         default: Site Title
+      ComposerProject:
+        default: Composer Project Namespace
+      ComposerUseDev:
+        default: Composer Build Type
+      InstallProfile:
+        default: Install Profile
 
 Parameters:
 
+  UseRDSClusterBoolean:
+    AllowedValues:
+      - True
+      - False
+    Default: False
+    Description: Specifies whether to use an RDS cluster or a single instance.
+    Type: String
   DatabaseClusterEndpointAddress:
     Description: The RDS cluster endpoint address.
     Type: String
@@ -140,37 +159,38 @@ Parameters:
   WebAsgMax:
     AllowedPattern: ^((?!0$)[1-2]?[0-9]|30)$
     ConstraintDescription: Must be a number between 1 and 30.
-    Default: 4
+    Default: 2
     Description: Specifies the maximum number of EC2 instances in the Web Autoscaling Group.
     Type: String
   WebAsgMin:
     AllowedPattern: ^([0-0]?[0-9]|10)$
     ConstraintDescription: Must be a number between 0 and 10.
-    Default: 2
+    Default: 1
     Description: Specifies the minimum number of EC2 instances in the Web Autoscaling Group.
     Type: String
   WebInstanceType:
     AllowedValues:
-      - t2.micro
-      - t2.small
-      - t2.medium
-      - t2.large
-      - m4.large
-      - m4.xlarge
-      - m4.2xlarge
-      - m4.4xlarge
-      - m4.10xlarge
-      - m3.medium
-      - m3.large
-      - m3.xlarge
-      - m3.2xlarge
-      - r3.large
-      - r3.xlarge
-      - r3.2xlarge
-      - r3.4xlarge
-      - r3.8xlarge
+      - t3.micro
+      - t3.small
+      - t3.medium
+      - t3.large
+      - m5.large
+      - m5.xlarge
+      - m5.2xlarge
+      - m5.4xlarge
+      - m5.8xlarge
+      - m5.12xlarge
+      - c5.large
+      - c5.xlarge
+      - c5.2xlarge
+      - c5.4xlarge
+      - r5.large
+      - r5.xlarge
+      - r5.2xlarge
+      - r5.4xlarge
+      - r5.8xlarge
     ConstraintDescription: Must be a valid Amazon EC2 instance type.
-    Default: t2.large
+    Default: t3.medium
     Description: The Amazon EC2 instance type for your web instances.
     Type: String
   WebSecurityGroup:
@@ -215,6 +235,23 @@ Parameters:
     AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9 _-]*)([a-zA-Z0-9])$
     Description: The Drupal website title.
     Type: String
+  InstallProfile:
+    Default: localgov
+    AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9 _-]*)([a-zA-Z0-9])$
+    Description: The Drupal install profile to use.
+    Type: String
+  ComposerProject:
+    Default: localgovdrupal/localgov-project
+    AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9\/ _-]*)([a-zA-Z0-9])$
+    Description: The composer project to install.
+    Type: String
+  ComposerUseDev:
+    AllowedValues:
+      - True
+      - False
+    Default: True
+    Description: Specifies whether Composer should use a dev version when installing Drupal.
+    Type: String
 
 Conditions:
 
@@ -226,6 +263,7 @@ Conditions:
       !Equals [ !Ref 'AWS::Region', us-east-2 ],
       !Equals [ !Ref 'AWS::Region', us-west-2 ],
       !Equals [ !Ref 'AWS::Region', eu-west-1 ],
+      !Equals [ !Ref 'AWS::Region', eu-west-2 ],
       !Equals [ !Ref 'AWS::Region', sa-east-1 ],
       !Equals [ !Ref 'AWS::Region', ap-northeast-1 ],
       !Equals [ !Ref 'AWS::Region', ap-southeast-2 ]
@@ -233,37 +271,38 @@ Conditions:
   NoDomainName:
     !Equals [ '', !Ref DomainName ]
 
+
 Mappings:
 
   RegionMap:
     ap-northeast-1:
-      AMI: ami-3bd3c45c
+      AMI: ami-06098fd00463352b6
     ap-northeast-2:
-      AMI: ami-e21cc38c
+      AMI: ami-07464b2b9929898f8
     ap-south-1:
-      AMI: ami-47205e28
+      AMI: ami-0bcf5425cdc1d8a85
     ap-southeast-1:
-      AMI: ami-77af2014
+      AMI: ami-03ca998611da0fe12
     ap-southeast-2:
-      AMI: ami-10918173
+      AMI: ami-06202e06492f46177
     ca-central-1:
-      AMI: ami-a7aa15c3
+      AMI: ami-09934b230a2c41883
     eu-central-1:
-      AMI: ami-82be18ed
+      AMI: ami-0db9040eb3ab74509
     eu-west-1:
-      AMI: ami-d7b9a2b1
+      AMI: ami-0ffea00000f287d30
     eu-west-2:
-      AMI: ami-ed100689
+      AMI: ami-0fbec3e0504ee1970
     sa-east-1:
-      AMI: ami-87dab1eb
+      AMI: ami-0c27c96aaa148ba6d
     us-east-1:
-      AMI: ami-a4c7edb2
+      AMI: ami-0742b4e673072066f
     us-east-2:
-      AMI: ami-8a7859ef
+      AMI: ami-05d72852800cbf29e
     us-west-1:
-      AMI: ami-327f5352
+      AMI: ami-0577b787189839998
     us-west-2:
-      AMI: ami-6df1e514
+      AMI: ami-0518bb0e75d3619ca
 
 Resources:
 
@@ -330,23 +369,34 @@ Resources:
       AWS::CloudFormation::Init:
         configSets:
           deploy_webserver:
+            - prepare_php
             - install_webserver
+            - install_composer
             - build_cacheclient
             - build_drupal
-            - build_opcache
             - install_cacheclient
             - install_drupal
-            - install_opcache
             - start_webserver
+        prepare_php:
+          commands:
+            enable_php_74:
+              command: 'amazon-linux-extras enable php7.4; yum clean metadata'
         install_webserver:
           packages:
             yum:
               awslogs: []
-              httpd24: []
-              mysql56: []
-              php70: []
-              php70-mysqlnd: []
-              php70-gd: []
+              httpd: []
+              mariadb: []
+              php: []
+              php-mysqlnd: []
+              php-gd: []
+              php-pdo: []
+              php-mbstring: []
+              php-opcache: []
+              php-pecl-memcached: []
+              php-pecl-apcu: []
+              php-xml: []
+              git: []
           files:
             /tmp/create_site_conf.sh:
               content:
@@ -356,8 +406,8 @@ Resources:
                     "if [ ! -f /etc/httpd/conf.d/", !Ref Directory, ".conf ]; then\n",                    
                     "   touch /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
                     "   echo 'ServerName 127.0.0.1:80' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
-                    "   echo 'DocumentRoot /var/www/drupal/", !Ref Directory, "' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
-                    "   echo '<Directory /var/www/drupal/", !Ref Directory, ">' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
+                    "   echo 'DocumentRoot /var/www/drupal/", !Ref Directory, "/web' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
+                    "   echo '<Directory /var/www/drupal/", !Ref Directory, "/web>' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
                     "   echo '  Options Indexes FollowSymLinks' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
                     "   echo '  AllowOverride All' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
                     "   echo '  Require all granted' >> /etc/httpd/conf.d/", !Ref Directory, ".conf\n",
@@ -373,6 +423,19 @@ Resources:
               command: ./create_site_conf.sh
               cwd: /tmp
               ignoreErrors: false
+        install_composer:
+          commands:
+            a_download_composer:
+              command: wget https://getcomposer.org/download/2.0.12/composer.phar
+              cwd: /tmp
+              ignoreErrors: false
+            b_install_composer:
+              command: mv /tmp/composer.phar /usr/bin/composer
+              ignoreErrors: false
+            c_set_composer_perms:
+              command: chmod +x composer
+              cwd: /usr/bin
+              ignoreErrors: false
         build_cacheclient:
           packages:
             yum:
@@ -380,39 +443,19 @@ Resources:
           files:
             /tmp/install_cacheclient.sh:
               content:
-                !Sub |
-                  #!/bin/bash -xe
-                  aws s3 cp 's3://aws-refarch/drupal/latest/bits/AmazonElastiCacheClusterClient-2.0.1-PHP70-64bit.tar.gz' /tmp/.
-                  tar -xf '/tmp/AmazonElastiCacheClusterClient-2.0.1-PHP70-64bit.tar.gz'
-                  cp '/tmp/artifact/amazon-elasticache-cluster-client.so' /usr/lib64/php/7.0/modules/
-                  if [ ! -f /etc/php-7.0.d/50-memcached.ini ]; then
-                      touch /etc/php-7.0.d/50-memcached.ini
-                  fi
-                  sed -i '3i extension=/usr/lib64/php/7.0/modules/amazon-elasticache-cluster-client.so;' /etc/php-7.0.d/50-memcached.ini
-                  sed -i '3i extension=igbinary.so;' /etc/php-7.0.d/50-memcached.ini
-              mode: 000500
-              owner: root
-              group: root
-        build_opcache:
-          packages:
-            yum:
-              php70-opcache: []
-          files:
-            /tmp/install_opcache.sh:
-              content:
-                !Sub |
-                  #!/bin/bash -xe
-                  # create hidden opcache directory locally & change owner to apache
-                  if [ ! -d /var/www/.opcache ]; then                    
-                      mkdir -p /var/www/.opcache
-                  fi
-                  # enable opcache in /etc/php-7.0.d/10-opcache.ini
-                  sed -i 's/;opcache.file_cache=.*/opcache.file_cache=\/var\/www\/.opcache/' /etc/php-7.0.d/10-opcache.ini
-                  sed -i 's/opcache.memory_consumption=.*/opcache.memory_consumption=512/' /etc/php-7.0.d/10-opcache.ini
-                  # download opcache-instance.php to verify opcache status
-                  if [ ! -f /var/www/drupal/${Directory}/opcache-instanceid.php ]; then
-                      aws s3 cp 's3://aws-refarch/drupal/latest/bits/opcache-instanceid.php' /var/www/drupal/${Directory}/.
-                  fi
+                !Join [
+                  "",[
+                    "#!/bin/bash -xe\n",
+                    "wget https://elasticache-downloads.s3.amazonaws.com/ClusterClient/PHP-7.4/latest-64bit-X86\n",
+                    "mv latest-64bit-X86 /tmp/AmazonElastiCacheClusterClient-PHP74-64bit-libmemcached.tar.gz\n",
+                    "tar -xf '/tmp/AmazonElastiCacheClusterClient-PHP74-64bit-libmemcached.tar.gz'\n",
+                    "cp '/tmp/amazon-elasticache-cluster-client.so' /usr/lib64/php/modules/\n",
+                    "if [ ! -f /etc/php.d/50-memcached.ini ]; then\n",
+                    "  echo 'extension=/usr/lib64/php/modules/amazon-elasticache-cluster-client.so' > /etc/php.d/50-memcached.ini\n",
+                    "fi\n",
+                    "sed -i 's/memcached.so/\\/usr\\/lib64\\/php\\/modules\\/amazon-elasticache-cluster-client.so/g' /etc/php.d/50-memcached.ini\n"
+                  ]
+                ]
               mode: 000500
               owner: root
               group: root
@@ -424,19 +467,34 @@ Resources:
                   "",[
                     "#!/bin/bash -xe\n",
                     "\n",
-                    "# make site directory\n",
-                    "if [ ! -d /var/www/drupal/", !Ref Directory, " ]; then\n",                    
-                    "   mkdir -p /var/www/drupal/", !Ref Directory, "\n",
+                    "# enable PHP logging to journald\n",
+                    "sed -i 's/;error_log = syslog/error_log = syslog/g' /etc/php.ini\n",
                     "\n",
-                    "   cd /tmp\n",
-                    "   wget http://ftp.drupal.org/files/projects/drupal-8.3.5.tar.gz\n",
-                    "   cd /var/www/drupal/", !Ref Directory, "\n",
-                    "   tar --strip-components=1 -xvzf /tmp/drupal-8.3.5.tar.gz\n",
-                    "   # set permissions of drupal site directories\n", 
-                    "   chown -R apache:apache /var/www/drupal/", !Ref Directory, "\n",
-                    "   if [ ! -f /var/www/drupal/", !Ref Directory, "/opcache-instanceid.php ]; then\n",
-                    "     aws s3 cp 's3://aws-refarch/wordpress/latest/bits/opcache-instanceid.php' /var/www/drupal/", !Ref Directory, "/.\n",
-                    "   fi\n",
+                    "# sleep for a random number of seconds up to 60 to avoid running composer simultaneously on first install\n",
+                    "sleep $((RANDOM % 60))\n",
+                    "# if target directory doesn't exist then build Drupal\n",
+                    "if [ ! -d /var/www/drupal/", !Ref Directory, " ]; then\n",
+                    "  # create drupal install user\n",
+                    "  useradd -g apache drupal\n",
+                    "  # set ownership and perms on application directory\n",
+                    "  chmod 775 /var/www/drupal\n",
+                    "  chown apache:apache /var/www/drupal\n",
+                    "  # run composer with drupal user\n",
+                    "  # no 'stable' version of LocalGovDrupal yet\n",
+                    "  cd /var/www/drupal/\n",
+                    "  su -c 'composer create-project --stability dev ", !Ref ComposerProject, " ", !Ref Directory, " --remove-vcs' drupal\n",
+                    "  # delete any settings.php files already there\n",
+                    "  rm -Rf ", !Ref Directory, "/web/sites/*/settings.*\n",
+                    "  # install the site with drush\n",
+                    "  su -c '", !Ref Directory, "/vendor/drush/drush/drush -y site-install ", !Ref InstallProfile, " --db-url=mysql://", !Ref DatabaseMasterUsername, ":", !Ref DatabaseMasterPassword, "@", !Ref DatabaseClusterEndpointAddress, "/", !Ref DatabaseName, "  --account-pass=", !Ref AdminPassword, " --account-mail=", !Ref AdminEmail, "' drupal\n",
+                    "  # run a cache rebuild for safety\n",
+                    "  su -c '/var/www/drupal/", !Ref Directory, "/vendor/drush/drush/drush -y cr' drupal\n",
+                    "else\n",
+                    "  # wait until Drupal is built so Apache restart step doesn't fail\n",
+                    "  until [ -d /var/www/drupal/", !Ref Directory, "/web ]\n",
+                    "  do\n",
+                    "    sleep 30\n",
+                    "  done\n",
                     "fi\n"
                   ]
                 ]
@@ -453,12 +511,6 @@ Resources:
           commands:
             install_cacheclient:
               command: ./install_cacheclient.sh
-              cwd: /tmp
-              ignoreErrors: false
-        install_opcache:
-          commands:
-            install_opcache:
-              command: ./install_opcache.sh
               cwd: /tmp
               ignoreErrors: false
         start_webserver:
@@ -490,8 +542,3 @@ Resources:
             sleep 600
             /opt/aws/bin/cfn-signal --exit-code $? --stack ${AWS::StackName} --resource WebAutoScalingGroup --region ${AWS::Region}
             service httpd restart
-
-Outputs:
-
-  Opcachestatus:
-    Value: !Join [ '', [ !Ref PublicAlbHostname, '/opcache-instanceid.php' ] ]
