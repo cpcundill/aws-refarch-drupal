@@ -344,7 +344,7 @@ Resources:
           !GetAtt [ newvpc, Outputs.PublicSubnet1 ]
         PublicSubnet2:
           !GetAtt [ newvpc, Outputs.PublicSubnet2 ]
-      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-03-bastion.yaml
+      TemplateURL: https://s3.eu-west-2.amazonaws.com/uk.gov.royalgreenwich.localgovdrupal.cf-templates/aws-refarch-drupal-03-bastion.yaml
   cloudfront:
     Condition: AvailableAWSRegion
     Condition: DeployCloudFront
@@ -358,7 +358,7 @@ Resources:
           !GetAtt [ publicalb, Outputs.PublicAlbDnsName ]
         DomainName:
           !Ref DomainName
-      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-04-cloudfront.yaml
+      TemplateURL: https://s3.eu-west-2.amazonaws.com/uk.gov.royalgreenwich.localgovdrupal.cf-templates/aws-refarch-drupal-04-cloudfront.yaml
   efs:
     Condition: AvailableAWSRegion
     DependsOn: [ newvpc, securitygroups ]
@@ -373,7 +373,7 @@ Resources:
           !GetAtt [ newvpc, Outputs.DataSubnet1 ]
         DataSubnet2:
           !GetAtt [ newvpc, Outputs.DataSubnet2 ]
-      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-03-efs.yaml
+      TemplateURL: https://s3.eu-west-2.amazonaws.com/uk.gov.royalgreenwich.localgovdrupal.cf-templates/aws-refarch-drupal-03-efs.yaml
   elasticache:
     Condition: AvailableAWSRegion
     Condition: DeployElastiCache
@@ -393,11 +393,11 @@ Resources:
           !Ref ElastiCacheNodeType
         ElastiCacheSecurityGroup:
           !GetAtt [ securitygroups, Outputs.ElastiCacheSecurityGroup ]
-      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-03-elasticache.yaml
+      TemplateURL: https://s3.eu-west-2.amazonaws.com/uk.gov.royalgreenwich.localgovdrupal.cf-templates/aws-refarch-drupal-03-elasticache.yaml
   newvpc:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-01-newvpc.yaml
+      TemplateURL: https://s3.eu-west-2.amazonaws.com/uk.gov.royalgreenwich.localgovdrupal.cf-templates/aws-refarch-drupal-01-newvpc.yaml
   publicalb:
     Condition: AvailableAWSRegion
     DependsOn: [ newvpc, securitygroups ]
@@ -416,7 +416,7 @@ Resources:
           !GetAtt [ securitygroups, Outputs.PublicAlbSecurityGroup ]
         Vpc:
           !GetAtt [ newvpc, Outputs.Vpc ]
-      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-03-publicalb.yaml
+      TemplateURL: https://s3.eu-west-2.amazonaws.com/uk.gov.royalgreenwich.localgovdrupal.cf-templates/aws-refarch-drupal-03-publicalb.yaml
   rdscluster:
     Condition: AvailableAWSRegion
     Condition: DeployRDSCluster
@@ -440,7 +440,7 @@ Resources:
           !GetAtt [ newvpc, Outputs.DataSubnet1 ]
         DataSubnet2:
           !GetAtt [ newvpc, Outputs.DataSubnet2 ]
-      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-03-rdscluster.yaml
+      TemplateURL: https://s3.eu-west-2.amazonaws.com/uk.gov.royalgreenwich.localgovdrupal.cf-templates/aws-refarch-drupal-03-rdscluster.yaml
   rdsinstance:
     Condition: AvailableAWSRegion
     Condition: DeployRDSInstance
@@ -468,7 +468,7 @@ Resources:
           !GetAtt [ newvpc, Outputs.DataSubnet2 ]
         MultiAZDatabase:
           !Ref MultiAZDatabase
-      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-03-rdsinstance.yaml
+      TemplateURL: https://s3.eu-west-2.amazonaws.com/uk.gov.royalgreenwich.localgovdrupal.cf-templates/aws-refarch-drupal-03-rdsinstance.yaml
   route53:
     Condition: AvailableAWSRegion
     Condition: CreateRecordSet
@@ -482,7 +482,7 @@ Resources:
           !If [ DeployCloudFront, 'Z2FDTNDATAQYW2', !GetAtt [ publicalb, Outputs.PublicAlbCanonicalHostedZoneId ] ]
         DomainName:
           !Ref DomainName
-      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-05-route53.yaml
+      TemplateURL: https://s3.eu-west-2.amazonaws.com/uk.gov.royalgreenwich.localgovdrupal.cf-templates/aws-refarch-drupal-05-route53.yaml
   securitygroups:
     Condition: AvailableAWSRegion
     DependsOn: newvpc
@@ -493,7 +493,7 @@ Resources:
           !Ref SshAccessCidr
         Vpc:
           !GetAtt [ newvpc, Outputs.Vpc ]
-      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-02-securitygroups.yaml
+      TemplateURL: https://s3.eu-west-2.amazonaws.com/uk.gov.royalgreenwich.localgovdrupal.cf-templates/aws-refarch-drupal-02-securitygroups.yaml
   web:
     Condition: AvailableAWSRegion
     DependsOn: [ efs, newvpc, publicalb, securitygroups ]
@@ -554,7 +554,7 @@ Resources:
           !Ref ComposerUseDev
         InstallProfile:
           !Ref InstallProfile
-      TemplateURL: https://ce-localgovdrupal.s3-eu-west-1.amazonaws.com/aws-refarch-drupal-04-web.yaml
+      TemplateURL: https://s3.eu-west-2.amazonaws.com/uk.gov.royalgreenwich.localgovdrupal.cf-templates/aws-refarch-drupal-04-web.yaml
 
 Outputs:
 
