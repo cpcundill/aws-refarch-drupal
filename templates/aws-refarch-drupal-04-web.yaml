@@ -241,8 +241,7 @@ Parameters:
     Description: The Drupal install profile to use.
     Type: String
   ComposerProject:
-    Default: localgovdrupal/localgov-project
-    AllowedPattern: ^([a-zA-Z0-9])([a-zA-Z0-9\/ _-]*)([a-zA-Z0-9])$
+    Default: localgovdrupal/localgov-project:2.0.3
     Description: The composer project to install.
     Type: String
   ComposerUseDev:
