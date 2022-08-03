@@ -541,3 +541,20 @@ Resources:
             sleep 600
             /opt/aws/bin/cfn-signal --exit-code $? --stack ${AWS::StackName} --resource WebAutoScalingGroup --region ${AWS::Region}
             service httpd restart
+  StartupAction:
+    Type: AWS::AutoScaling::ScheduledAction
+    Properties:
+      AutoScalingGroupName: !Ref WebAutoScalingGroup
+      MinSize: 1
+      MaxSize: 1
+      DesiredCapacity: 1
+      Recurrence: "0 8 * * MON-FRI"
+  ShutdownAction:
+    Type: AWS::AutoScaling::ScheduledAction
+    Properties:
+      AutoScalingGroupName: !Ref WebAutoScalingGroup
+      MinSize: 0
+      MaxSize: 0
+      DesiredCapacity: 0
+      Recurrence: "0 18 * * MON-FRI"
+
